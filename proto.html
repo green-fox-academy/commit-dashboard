@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Zerda lasers commit dashboard</title>
+	<style>
+		body {
+			background: #000;
+			font-family: Arial;
+			text-align: center;
+		}
+		#results {
+			width: 800px;
+			margin: 0 auto;
+		}
+		img {
+			border-radius: 50%;
+			margin: 0 1rem;
+		}
+		article {
+			display: inline-block;
+			position: relative;
+		}
+
+		article div {
+			position: absolute;
+			right: 0;
+			top: 0;
+			background: tomato;
+			padding: 5px 10px;
+			border-radius: 50%;
+		}
+
+		h1 {
+			color: #fff;
+			text-align: left;
+			border-bottom: 1px solid #999;
+			padding: 1rem 0;
+		}
+	</style>
+</head>
+<body>
+	<div id="results">
+		<h1>GitHub heros</h1>		
+	</div>
+	<script>
+		var url = 'test.json'
+		var url = 'https://api.github.com/orgs/greenfox-zerda-lasers/events'
+		var today = new Date().getDate()
+		var uniqueUsers = [] // [{userData}]
+
+		var mainRequest = fetch(url, {
+			method: 'get'
+		}).then(function(response) {
+			return response.json()
+		}).catch(function(err) {
+			console.log("Error is",err)
+		});
+
+
+		mainRequest.then( function( json ) {
+			// console.log(json)
+			var x = 0
+			for (var i = 0; i < json.length; i++) {
+				var userData = { count: 1 }
+				var d = new Date( json[i].created_at);
+				if( today == d.getDate() ) {
+					userData.name = json[i].actor.login
+					userData.image = json[i].actor.avatar_url
+					userData.commit = json[i].payload.commits[0].message
+
+					var index = uniqueUsers.findIndex( x => x.name == userData.name )
+
+					if( index == -1 ) {
+						uniqueUsers.push(userData)
+					} else {
+						uniqueUsers[index]['count']++
+					}
+				}
+			}
+			uniqueUsers.sort(function(a,b) {
+				return b.count - a.count
+			})
+			render(uniqueUsers)
+		})
+
+		function render( users ) {
+			users.forEach( function ( el ) {
+				var wrapper = document.createElement('article')
+				var label = document.createElement('div')
+				label.innerHTML = el.count
+				var img = document.createElement('img')
+				img.src = el.image + "size=120"
+				wrapper.appendChild( img )
+				wrapper.appendChild( label )
+				document.getElementById('results').appendChild( wrapper )
+			})
+		}
+
+		setTimeout(function () {
+			window.location.reload(true);
+		}, 3 * 60 * 1000)
+
+	</script>
+</body>
+</html>
